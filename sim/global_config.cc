@@ -32,6 +32,7 @@ const char NAME_INTERFACE[] = "Interface";
 const char NAME_SCHEDULER[] = "Scheduler";
 const char NAME_SUBMISSION_LATENCY[] = "SubmissionLatency";
 const char NAME_COMPLETION_LATENCY[] = "CompletionLatency";
+const char NAME_REFRESH_PERIOD[] = "RefreshPeriod";
 
 Config::Config() {
   mode = MODE_REQUEST_GENERATOR;
@@ -39,6 +40,7 @@ Config::Config() {
   progressPeriod = 0;
   interface = INTERFACE_NVME;
   scheduler = SCHEDULER_NOOP;
+  refreshPeriod = 0;
 }
 
 bool Config::setConfig(const char *name, const char *value) {
@@ -73,6 +75,9 @@ bool Config::setConfig(const char *name, const char *value) {
   }
   else if (MATCH_NAME(NAME_COMPLETION_LATENCY)) {
     completionLatency = convertTime(value);
+  }
+  else if (MATCH_NAME(NAME_REFRESH_PERIOD)) {
+    refreshPeriod = strtoul(value, nullptr, 10);
   }
   else {
     ret = false;

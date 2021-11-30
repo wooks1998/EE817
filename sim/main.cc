@@ -31,6 +31,8 @@
 #include "simplessd/util/simplessd.hh"
 #include "util/print.hh"
 
+#include "simplessd/ftl/ftl.hh"
+
 // Global objects
 Engine engine;
 ConfigReader simConfig;
@@ -47,6 +49,11 @@ std::vector<SimpleSSD::Stats> statList;
 std::ofstream logOut;
 std::ofstream debugLogOut;
 std::ofstream latencyFile;
+
+// refresh event
+SimpleSSD::FTL::FTL *ftl;
+SimpleSSD::Event refreshEvent;
+uint64_t refresh_period;
 
 // Declaration
 void cleanup(int);
@@ -183,10 +190,15 @@ int main(int argc, char *argv[]) {
   pBIOEntry =
       new BIL::BlockIOEntry(simConfig, engine, pInterface, pLatencyFile);
 
+  refresh_period = simConfig.readUint(CONFIG_GLOBAL, GLOBAL_REFRESH_PERIOD);
   std::function<void()> endCallback = []() {
     // If stat printout is scheduled, delete it
     if (simConfig.readUint(CONFIG_GLOBAL, GLOBAL_LOG_PERIOD) > 0) {
       engine.descheduleEvent(statEvent);
+    }
+    // If refresh is scheduled, delete it
+    if (simConfig.readUint(CONFIG_GLOBAL, GLOBAL_REFRESH_PERIOD) > 0) {
+      engine.descheduleEvent(refreshEvent);
     }
 
     // Stop simulation
@@ -239,6 +251,22 @@ int main(int argc, char *argv[]) {
         simConfig.readUint(CONFIG_GLOBAL, GLOBAL_LOG_PERIOD) * 1000000000ULL);
   }
 
+  //add refresh event
+  if (simConfig.readUint(CONFIG_GLOBAL, GLOBAL_REFRESH_PERIOD) > 0) {
+    refreshEvent = engine.allocateEvent([](uint64_t tick) {
+      //call refresh
+      ftl->refresh();
+
+      engine.scheduleEvent(
+          refreshEvent,
+          tick + simConfig.readUint(CONFIG_GLOBAL, GLOBAL_REFRESH_PERIOD) *
+                     1000000000ULL);
+    });
+    engine.scheduleEvent(
+        statEvent,
+        simConfig.readUint(CONFIG_GLOBAL, GLOBAL_LOG_PERIOD) * 1000000000ULL);
+  }
+  
   // Do Simulation
   std::cout << "********** Begin of simulation **********" << std::endl;
 

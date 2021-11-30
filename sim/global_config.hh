@@ -27,6 +27,7 @@
 typedef enum {
   GLOBAL_SIM_MODE,
   GLOBAL_LOG_PERIOD,
+  GLOBAL_REFRESH_PERIOD,
   GLOBAL_LOG_FILE,
   GLOBAL_DEBUG_LOG_FILE,
   GLOBAL_LATENCY_LOG_FILE,
@@ -68,6 +69,8 @@ class Config : public SimpleSSD::BaseConfig {
   SCHEDULER scheduler;
   uint64_t submissionLatency;
   uint64_t completionLatency;
+  uint64_t refreshPeriod;
+
 
  public:
   Config();
